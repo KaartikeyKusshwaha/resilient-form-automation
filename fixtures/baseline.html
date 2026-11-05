@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"></script>
+    <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "i44tza3a99");
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#mytextarea').summernote({
+                height: 100
+            });
+        });
+    </script>
+
+    <style>
+        .autocomplete-items {
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            /*position the autocomplete items to be the same width as the container:*/
+            top: 100%;
+            left: 0;
+            right: 0;
+        }
+
+            .autocomplete-items div {
+                padding: 10px;
+                cursor: pointer;
+                background-color: #fff;
+                border-bottom: 1px solid #d4d4d4;
+            }
+
+                .autocomplete-items div:hover {
+                    /*when hovering an item:*/
+                    background-color: #e9e9e9;
+                }
+
+        .autocomplete-active {
+            /*when navigating through the items using the arrow keys:*/
+            background-color: DodgerBlue !important;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+            <form method="post" class="well" id="automationtestform" action="/Home/AutomationPracticeForm">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2>Form</h2>
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label for="fname" name="fname" class="control-label">First Name</label>
+                        <input id="fname" type="text" name="First Name" class="form-control" placeholder="Name" />
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label for="lname" name="lname" class="control-label">Last Name</label>
+                        <input id="lname" type="text" name="Last Name" class="form-control" placeholder="Surname" />
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label class="control-label">Gender</label>
+                        <div class="col-lg-12">
+                            <input id="male" type="radio" name="gender" value="Male" />
+                            <span name="male" for="male" class="control-label">Male</span>
+                            <input id="female" type="radio" name="gender" value="Female" />
+                            <span name="female" for="female" class="control-label">Female</span>
+                            <input id="transgender" type="radio" name="gender" value="Transgender" />
+                            <span name="transgender" for="female" class="control-label">Transgender</span>
+                        </div>
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label for="dob" name="dob" class="control-label">Date of Birth</label>
+                        <input id="dob" type="text" name="Date of Birth" placeholder="YYYY-MM-DD" required
+                               pattern="^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$"
+                               title="Enter a date in this format YYYY-MM-DD" class="form-control" />
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label name="mobile" for="mobile" class="control-label">Mobile #</label>
+                        <input id="mobile" name="Mobile Number" class="form-control" type="number" maxlength="10" pattern=".{10}" placeholder="Mobile Number" />
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label name="email" for="email" class="control-label">Email</label>
+                        <input id="email" type="text" name="Email" class="form-control" placeholder="Email" />
+                    </div>
+                    <div class="autocomplete form-group col-xs-6">
+                        <label name="Country" for="country" class="control-label"> Country </label>
+                        <input id="country" type="text" name="Country" placeholder="Country" class="form-control" />
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label name="State" for="state" class="control-label"> State </label>
+                        <select class="form-control" id="state" name="State">
+                            <option> -- Select Country -- </option>
+                            <option value="Afganistan"> Afganistan </option>
+                            <option value="Argentina">Argentina</option>
+                            <option value="Australia">Australia</option>
+                            <option value="Bangladesh">Bangladesh</option>
+                            <option value="Belgium">Belgium</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Cuba">Cuba</option>
+                            <option value="Denmark">Denmark</option>
+                            <option value="Egypt">Egypt</option>
+                            <option value="Finland">Finland</option>
+                            <option value="France">France</option>
+                            <option value="Germany">Germany</option>
+                            <option value="Greece">Greece</option>
+                            <option value="Greenland">Greenland</option>
+                            <option value="Hong Kong">Hong Kong</option>
+                            <option value="India">India</option>
+                            <option value="Indonesia">Indonesia</option>
+                            <option value="Italy">Italy</option>
+                            <option value="Japan">Japan</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="Malaysia">Malaysia</option>
+                            <option value="Mexico">Mexico</option>
+                            <option value="Nepal">Nepal</option>
+                            <option value="Netherlands">Netherlands</option>
+                            <option value="Philippines">Philippines</option>
+                            <option value="Russia">Russia</option>
+                            <option value="Saudi Arabia">Saudi Arabia</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Turkey">Turkey</option>
+                            <option value="United Arab Emirates">United Arab Emirates</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="United States">United States</option>
+                            <option value="Zimbabwe">Zimbabwe</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <label class="control-label">Hobbies</label>
+                        <input type="checkbox" id="Dance" Value="Dance" name="Hobbies" />
+                        <span name="Dance" for="Dance">Dance</span>
+                        <input type="checkbox" id="Reading" Value="Reading" name="Hobbies" />
+                        <span name="Reading" for="Reading">Reading</span>
+                        <input type="checkbox" id="Cricket" Value="Cricket" name="Hobbies" />
+                        <span name="Cricket" for="Cricket">Cricket</span>
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <label class="control-label">About Yourself</label>
+                        <textarea class="form-control" rows="3" placeholder="About Yourself" name="About"></textarea>
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <label class="control-label">Description</label>
+                        <textarea id="mytextarea"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            <i class="glyphicon glyphicon-user"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Username" name="Username" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-4">
+                                <input type="file" name="pic" class="btn btn-default" />
+                            </div>
+                            <div class="col-xs-2">
+                                <div class="dropdown">
+                                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                                        Know about us
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="//app.cloudqa.io" target="_blank">Applcation Login</a></li>
+                                        <li><a href="//cloudqa.io" target="_blank">Cloudqa Site</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    <i class="glyphicon glyphicon-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" placeholder="Password" name="Password" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    <i class="glyphicon glyphicon-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" placeholder="Confirm Password" name="Confirm Password" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <input type="checkbox" id="Agree" Value="Agree" name="Agree" required />
+                        I agree to <a href="#">terms & comments</a>
+                        <br />
+                        <br />
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-primary" type="submit" Value="submit">Submit</button>
+                    <button class="btn btn-primary" type="reset" Value="reset">Reset</button>
+                    <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                </div>
+            <input name="__RequestVerificationToken" type="hidden" value="REDACTED" /></form>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+                Launch demo modal
+            </button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="mdo">Open modal for mdo</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="fat">Open modal for fat</button>
+            <div class="row">
+                <div class="col-xs-12">
+                    <h1>IFrame without ID</h1>
+                    <iframe src="/Home/IFrame" style="width:100%;height:100vh;"></iframe>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <h1>IFrame with ID</h1>
+                    <iframe id="iframeId" src="/Home/InnerNestedIFrame" style="width:100%;height:100vh;"></iframe>
+                </div>
+            </div>
+            <div class="row mb-5">
+                <div class="col-xs-12">
+                    <form method="post" class="well" id="shadowdomautomationtestform" action="/Home/AutomationPracticeForm">
+                        <h1>Shadow DOM</h1>
+                        <shadow-form></shadow-form>
+                        <div>
+                            <s-button></s-button>
+                            <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                        </div>
+                    <input name="__RequestVerificationToken" type="hidden" value="REDACTED" /></form>
+                </div>
+            </div>
+            <div class="row mb-5">
+                <div class="col-xs-12">
+                    <form method="post" class="well" id="nestedshadowdomautomationtestform" action="/Home/AutomationPracticeForm">
+                        <h1>Nested Shadow DOM</h1>
+                        <nestedshadow-form></nestedshadow-form>
+                        <div>
+                            <s-button></s-button>
+                            <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                        </div>
+                    <input name="__RequestVerificationToken" type="hidden" value="REDACTED" /></form>
+                </div>
+            </div>
+            <div class="row mb-5">
+                <div class="col-xs-12">
+                    <form method="post" class="well" id="nestedshadowdomautomationtestform3" action="/Home/AutomationPracticeForm">
+                        <h1>Nested Shadow DOM with 3 Levels</h1>
+                        <nestedshadow-form3></nestedshadow-form3>
+                        <div>
+                            <s-button></s-button>
+                            <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                        </div>
+                    <input name="__RequestVerificationToken" type="hidden" value="REDACTED" /></form>
+                </div>
+            </div>
+             <div class="row mb-5">
+                <div class="col-xs-12">
+                    <form method="post" class="well" id="nestedshadowdomautomationtestform4" action="/Home/AutomationPracticeForm">
+                        <h1>Nested Shadow DOM with 4 Levels</h1>
+                        <nestedshadow-form4></nestedshadow-form4>
+                        <div>
+                            <s-button></s-button>
+                            <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                        </div>
+                    <input name="__RequestVerificationToken" type="hidden" value="REDACTED" /></form>
+                </div>
+            </div>
+            <div class="row mb-5">
+                <div class="col-xs-12">
+                    <form method="post" class="well" id="nestedshadowdomautomationtestform5" action="/Home/AutomationPracticeForm">
+                        <h1>Nested Shadow DOM with 5 Levels</h1>
+                        <nestedshadow-form5></nestedshadow-form5>
+                        <div>
+                            <s-button></s-button>
+                            <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                        </div>
+                    <input name="__RequestVerificationToken" type="hidden" value="REDACTED" /></form>
+                </div>
+            </div>
+            <div class="row mb-5">
+                <div class="col-xs-12">
+                    <form method="post" class="well" id="nestedshadowdomautomationtestform6" action="/Home/AutomationPracticeForm">
+                        <h1>Nested Shadow DOM with 6 Levels</h1>
+                        <nestedshadow-form6></nestedshadow-form6>
+                        <div>
+                            <s-button></s-button>
+                            <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                        </div>
+                    <input name="__RequestVerificationToken" type="hidden" value="REDACTED" /></form>
+                </div>
+            </div>
+            <div class="row mb-5">
+                <div class="col-xs-12">
+                    <h1>IFrame inside Shadow DOM</h1>
+                    <nestedshadow-iframe></nestedshadow-iframe>
+                    <div>
+                        <s-button></s-button>
+                        <a href="//app.cloudqa.io" class="btn btn-primary">Cancel</a>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <div class="modal fade" id="myModal" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button data-dismiss="modal" class="close" type="button" aria-label="Close">
+                        <span araia-hidden="true">&times;</span>
+                    </button>
+                    This is Header
+                </div>
+                <div class="modal-body">
+                    This is body
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-palcement="top" title="Tooltip">This is tooltip</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">New message</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label">Recipient:</label>
+                            <input type="text" class="form-control" id="recipient-name">
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">Message:</label>
+                            <textarea class="form-control" id="message-text"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Send message</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('#exampleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var recipient = button.data('whatever') // Extract info from data-* attributes
+            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+            var modal = $(this)
+            modal.find('.modal-title').text('New message to ' + recipient)
+            modal.find('.modal-body input').val(recipient)
+        });
+        function autocomplete(inp, arr) {
+            /*the autocomplete function takes two arguments,
+            the text field element and an array of possible autocompleted values:*/
+            var currentFocus;
+            /*execute a function when someone writes in the text field:*/
+            inp.addEventListener("input", function (e) {
+                var a, b, i, val = this.value;
+                /*close any already open lists of autocompleted values*/
+                closeAllLists();
+                if (!val) { return false; }
+                currentFocus = -1;
+                /*create a DIV element that will contain the items (values):*/
+                a = document.createElement("DIV");
+                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("class", "autocomplete-items");
+                /*append the DIV element as a child of the autocomplete container:*/
+                this.parentNode.appendChild(a);
+                /*for each item in the array...*/
+                for (i = 0; i < arr.length; i++) {
+                    /*check if the item starts with the same letters as the text field value:*/
+                    if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+                        /*create a DIV element for each matching element:*/
+                        b = document.createElement("DIV");
+                        /*make the matching letters bold:*/
+                        b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+                        b.innerHTML += arr[i].substr(val.length);
+                        /*insert a input field that will hold the current array item's value:*/
+                        b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                        /*execute a function when someone clicks on the item value (DIV element):*/
+                        b.addEventListener("click", function (e) {
+                            /*insert the value for the autocomplete text field:*/
+                            inp.value = this.getElementsByTagName("input")[0].value;
+                            /*close the list of autocompleted values,
+                            (or any other open lists of autocompleted values:*/
+                            closeAllLists();
+                        });
+                        a.appendChild(b);
+                    }
+                }
+            });
+            /*execute a function presses a key on the keyboard:*/
+            inp.addEventListener("keydown", function (e) {
+                var x = document.getElementById(this.id + "autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                if (e.keyCode == 40) {
+                    /*If the arrow DOWN key is pressed,
+                    increase the currentFocus variable:*/
+                    currentFocus++;
+                    /*and and make the current item more visible:*/
+                    addActive(x);
+                } else if (e.keyCode == 38) { //up
+                    /*If the arrow UP key is pressed,
+                    decrease the currentFocus variable:*/
+                    currentFocus--;
+                    /*and and make the current item more visible:*/
+                    addActive(x);
+                } else if (e.keyCode == 13) {
+                    /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                    e.preventDefault();
+                    if (currentFocus > -1) {
+                        /*and simulate a click on the "active" item:*/
+                        if (x) x[currentFocus].click();
+                    }
+                }
+            });
+            function addActive(x) {
+                /*a function to classify an item as "active":*/
+                if (!x) return false;
+                /*start by removing the "active" class on all items:*/
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = (x.length - 1);
+                /*add class "autocomplete-active":*/
+                x[currentFocus].classList.add("autocomplete-active");
+            }
+            function removeActive(x) {
+                /*a function to remove the "active" class from all autocomplete items:*/
+                for (var i = 0; i < x.length; i++) {
+                    x[i].classList.remove("autocomplete-active");
+                }
+            }
+            function closeAllLists(elmnt) {
+                /*close all autocomplete lists in the document,
+                except the one passed as an argument:*/
+                var x = document.getElementsByClassName("autocomplete-items");
+                for (var i = 0; i < x.length; i++) {
+                    if (elmnt != x[i] && elmnt != inp) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
+                }
+            }
+            /*execute a function when someone clicks in the document:*/
+            document.addEventListener("click", function (e) {
+                closeAllLists(e.target);
+            });
+        }
+
+        /*An array containing all the country names in the world:*/
+        var countries = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Anguilla", "Antigua & Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia & Herzegovina", "Botswana", "Brazil", "British Virgin Islands", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central Arfrican Republic", "Chad", "Chile", "China", "Colombia", "Congo", "Cook Islands", "Costa Rica", "Cote D Ivoire", "Croatia", "Cuba", "Curacao", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Falkland Islands", "Faroe Islands", "Fiji", "Finland", "France", "French Polynesia", "French West Indies", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guam", "Guatemala", "Guernsey", "Guinea", "Guinea Bissau", "Guyana", "Haiti", "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Isle of Man", "Israel", "Italy", "Jamaica", "Japan", "Jersey", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauro", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russia", "Rwanda", "Saint Pierre & Miquelon", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "St Kitts & Nevis", "St Lucia", "St Vincent", "Sudan", "Suriname", "Swaziland", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor L'Este", "Togo", "Tonga", "Trinidad & Tobago", "Tunisia", "Turkey", "Turkmenistan", "Turks & Caicos", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Virgin Islands (US)", "Yemen", "Zambia", "Zimbabwe"];
+
+        /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+        autocomplete(document.getElementById("country"), countries);
+
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+            //$('#automationtestform').on("submit", function (event) {
+            //    $('#infoMsg').removeClass('hide');
+            //    $('input').val("");
+            //    return false;
+            //});
+
+            //tinymce.init({
+            //    selector: '#mytextarea'
+            //});
+        });
+    </script>
+    <script>
+        customElements.define('shadow-form', class extends HTMLElement {
+            constructor() {
+                super()
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `
+                                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                <div class="row">
+                                <div class="form-group col-xs-6">
+                                    <label for="fname" name="fname" class="control-label">First Name</label>
+                                    <slot name="fname"></slot>
+                                </div>
+                                <div class="form-group col-xs-6">
+                                    <label for="lname" name="lname" class="control-label">Last Name</label>
+                                    <slot name="lname"></slot>
+                                </div>
+                                <div class="form-group col-xs-6">
+                                    <label class="control-label">Gender</label>
+                                    <div class="col-lg-12">
+                                        <slot name="gender"></slot>
+                                    </div>
+                                </div>
+                                <div class="form-group col-xs-6">
+                                    <label name="State" for="state" class="control-label"> State </label>
+                                    <slot name="statedropdown"></slot>
+                                </div>
+                                <div class="form-group col-xs-12">
+                                    <label class="control-label">Hobbies</label>
+                                    <slot name="hobbies"></slot>
+                                </div>
+                                <div class="form-group col-xs-12">
+                                    <label class="control-label">About Yourself</label>
+                                    <slot name="about"></slot>
+                                </div>
+                                <div class="form-group col-xs-12">
+                                    <label class="control-label">Description</label>
+                                    <slot name="description"></slot>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <input type="checkbox" id="Agree" Value="Agree" name="Agree" required />
+                                    I agree to <a href="#">terms & comments</a>
+                                    <br />
+                                    <br />
+                                </div>
+                            </div>
+                            `
+            }
+            connectedCallback() {
+                this.innerHTML = `<section slot="statedropdown">
+                                    <select class="form-control" id="state" name="State">
+                                        <option> -- Select Country -- </option>
+                                        <option value="Afganistan"> Afganistan </option>
+                                        <option value="Argentina">Argentina</option>
+                                        <option value="Australia">Australia</option>
+                                        <option value="Bangladesh">Bangladesh</option>
+                                        <option value="Belgium">Belgium</option>
+                                        <option value="Canada">Canada</option>
+                                        <option value="Cuba">Cuba</option>
+                                        <option value="Denmark">Denmark</option>
+                                        <option value="Egypt">Egypt</option>
+                                        <option value="Finland">Finland</option>
+                                        <option value="France">France</option>
+                                        <option value="Germany">Germany</option>
+                                        <option value="Greece">Greece</option>
+                                        <option value="Greenland">Greenland</option>
+                                        <option value="Hong Kong">Hong Kong</option>
+                                        <option value="India">India</option>
+                                        <option value="Indonesia">Indonesia</option>
+                                        <option value="Italy">Italy</option>
+                                        <option value="Japan">Japan</option>
+                                        <option value="Kenya">Kenya</option>
+                                        <option value="Malaysia">Malaysia</option>
+                                        <option value="Mexico">Mexico</option>
+                                        <option value="Nepal">Nepal</option>
+                                        <option value="Netherlands">Netherlands</option>
+                                        <option value="Philippines">Philippines</option>
+                                        <option value="Russia">Russia</option>
+                                        <option value="Saudi Arabia">Saudi Arabia</option>
+                                        <option value="Singapore">Singapore</option>
+                                        <option value="Turkey">Turkey</option>
+                                        <option value="United Arab Emirates">United Arab Emirates</option>
+                                        <option value="United Kingdom">United Kingdom</option>
+                                        <option value="United States">United States</option>
+                                        <option value="Zimbabwe">Zimbabwe</option>
+                                    </select>
+                            </section>
+                            <section slot="dropdownmenu">
+                                <ul class="dropdown-menu">
+                                    <li><a href="//app.cloudqa.io" target="_blank">Applcation Login</a></li>
+                                    <li><a href="//cloudqa.io" target="_blank">Cloudqa Site</a></li>
+                                </ul>
+                            </section>
+                            <section slot="fname">
+                                <input id="fname" name="fname" type="text" class="form-control" placeholder="Name" />
+                             </section>
+                            <section slot="lname">
+                                <input id="lname" name="lname" type="text" class="form-control" placeholder="Name" />
+                             </section>
+                            <section slot="gender">
+                                <input id="male" type="radio" name="gender" value="Male" />
+                                <span name="male" for="male" class="control-label">Male</span>
+                                <input id="female" type="radio" name="gender" value="Female" />
+                                <span name="female" for="female" class="control-label">Female</span>
+                                <input id="transgender" type="radio" name="gender" value="Transgender" />
+                                <span name="transgender" for="female" class="control-label">Transgender</span>
+                            </section>
+                            <section slot="hobbies">
+                                <input type="checkbox" id="Dance" Value="Dance" name="Hobbies" />
+                                    <span name="Dance" for="Dance">Dance</span>
+                                    <input type="checkbox" id="Reading" Value="Reading" name="Hobbies" />
+                                    <span name="Reading" for="Reading">Reading</span>
+                                    <input type="checkbox" id="Cricket" Value="Cricket" name="Hobbies" />
+                                    <span name="Cricket" for="Cricket">Cricket</span>
+                            </section>
+                            <section slot="about">
+                                <textarea class="form-control" rows="3" placeholder="About Yourself" name="About"></textarea>
+                            </section>
+                            <section slot="description">
+                                <textarea class="form-control" rows="3" placeholder="" name="description"></textarea>
+                            </section>
+                        `
+            }
+        })
+        customElements.define('s-button', class extends HTMLElement {
+            connectedCallback() {
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                            <button class="btn btn-primary">Submit</button>`
+                var submit = this.appendChild(document.createElement('button'))
+                this.onclick = () => submit.click()
+            }
+        })
+        customElements.define('nestedshadow-form', class extends HTMLElement {
+            constructor() {
+                super()
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                          <shadow-form></shadow-form>`;
+            }
+        })
+        customElements.define('nestedshadow-form3', class extends HTMLElement {
+            constructor() {
+                super()
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                                  <nestedshadow-form></nestedshadow-form>`;
+            }
+        })
+        customElements.define('nestedshadow-form4', class extends HTMLElement {
+            constructor() {
+                super()
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                                  <nestedshadow-form3></nestedshadow-form3>`;
+            }
+        })
+        customElements.define('nestedshadow-form5', class extends HTMLElement {
+            constructor() {
+                super()
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                                  <nestedshadow-form4></nestedshadow-form4>`;
+            }
+        })
+        customElements.define('nestedshadow-form6', class extends HTMLElement {
+            constructor() {
+                super()
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                                          <nestedshadow-form5></nestedshadow-form5>`;
+            }
+        })
+        customElements.define('nestedshadow-iframe', class extends HTMLElement {
+            connectedCallback() {
+                this.attachShadow({ mode: 'open' })
+                    .innerHTML = `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+                                            <iframe id="iframeId" src="AutomationPracticeForm" style="width:100%;height:100vh;"></iframe>`
+            }
+        })
+    </script>
+</body>
+</html>
+
