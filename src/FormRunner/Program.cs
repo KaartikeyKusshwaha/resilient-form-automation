@@ -48,12 +48,21 @@ try
     }
 
     stage = "field checks";
-    var automator = new FormAutomator(Console.WriteLine, TimeSpan.FromSeconds(options.TimeoutSeconds));
+    var automator = new FormAutomator(options.Verbose ? Console.WriteLine : null,
+        TimeSpan.FromSeconds(options.TimeoutSeconds), options.PollMilliseconds, options.Verbose);
     var data = new TestData(options.FirstName, options.Gender, options.State ?? "", options.Country ?? "");
     var results = automator.Run(driver, data);
+    var passed = 0;
     foreach (var result in results)
-        Console.WriteLine($"PASS {result.Field}: '{result.Value}' verified (score {result.Score}).");
-    return results.Count == 3 ? 0 : 1;
+    {
+        var status = result.Status.Equals("Passed", StringComparison.OrdinalIgnoreCase) ? "PASS" : result.Status.ToUpperInvariant();
+        if (status == "PASS") passed++;
+        var value = result.Value.Length == 0 ? "<none>" : $"'{result.Value}'";
+        Console.WriteLine($"[{status}] {result.Field}: {value} — {result.Message} (score {result.Score:0.0}).");
+        if (result.Degraded) Console.WriteLine($"  Degraded interaction strategy used: {string.Join(", ", result.Actions ?? [])}.");
+    }
+    Console.WriteLine($"Summary: {passed} passed, {results.Count - passed} failed or errored.");
+    return results.Count == 3 && passed == 3 ? 0 : 1;
 }
 catch (Exception ex)
 {
@@ -75,9 +84,9 @@ static void WaitForPage(IWebDriver driver, RunnerOptions options)
     {
         var javascript = (IJavaScriptExecutor)current;
         var ready = javascript.ExecuteScript("return document.readyState")?.ToString();
-        var count = javascript.ExecuteScript("return document.querySelectorAll('input,select,textarea,[role=textbox],[role=radio],[role=combobox]').length");
+        var collectable = javascript.ExecuteScript("const roots=[document];while(roots.length){const root=roots.shift();if(root.querySelector('input,select,textarea,[role=textbox],[role=radio],[role=combobox],[role=listbox],[aria-haspopup=listbox],[contenteditable=true]'))return true;if(root.querySelector('iframe,frame'))return true;for(const host of root.querySelectorAll('*'))if(host.shadowRoot?.mode==='open')roots.push(host.shadowRoot);}return false;");
         return string.Equals(ready, "complete", StringComparison.OrdinalIgnoreCase) &&
-               Convert.ToInt64(count, System.Globalization.CultureInfo.InvariantCulture) > 0;
+               bool.TryParse(collectable?.ToString(), out var hasCandidate) && hasCandidate;
     });
 }
 
