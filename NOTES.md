@@ -61,7 +61,7 @@ The integration tests use `data-test-target` and `data-test-decoy` only in fixtu
 - Manual `report.json` check showed three checks, confidence/signals, actions, screenshots, duration, browser, and summary counts.
 - `--dump-html` saved the rendered DOM while redacting request-verification token values.
 - `scripts/verify-clean-clone.ps1`: passed on Windows; clean clone built warning-free and all 35 offline tests passed.
-- GitHub Actions execution is pending until the repository is pushed.
+- GitHub Actions run `42206785547`: passed on 2026-11-06; warning-free build and non-live/mutation tests green.
 
 ## Limitations
 
@@ -73,5 +73,5 @@ The integration tests use `data-test-target` and `data-test-decoy` only in fixtu
 
 ## Open items
 
-- Record GitHub Actions status after pushing the private repository.
+- CI status is recorded above; the run includes informational runner/action deprecation notices only.
 - Keep the limitations section aligned with the actual behavior and any test failures.
