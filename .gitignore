@@ -1,7 +1,31 @@
+# .NET build and test output
 bin/
 obj/
-.vs/
+*.user
+TestResults/
+artifacts/
+
+# Python tools used by repository scripts
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Secrets and generated reports
 .env
-test-results/
+reports/
+*.trace.zip
 *.log
-drivers/
+
+# Local capture from the live assessment page; contains session-specific markup
+fixtures/live.html
+
+# IDE and operating system
+.DS_Store
+.vs/
+.idea/
+.vscode/
