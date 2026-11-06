@@ -1,4 +1,3 @@
-using System.Text.Json;
 using OpenQA.Selenium.Support.UI;
 
 namespace FormAutomation;
@@ -8,7 +7,11 @@ public sealed record TestData(string FirstName, string Gender, string State, str
 
 /// <summary>Outcome of one field check, including the observed value and selected strategy.</summary>
 public sealed record FieldResult(string Field, string Status, string Message, string Value, double Score,
-    bool Degraded = false, IReadOnlyList<string>? Actions = null);
+    bool Degraded = false, IReadOnlyList<string>? Actions = null, ResolvedField? Resolved = null);
+
+/// <summary>Explainability details for the resolved element.</summary>
+public sealed record ResolvedField(string Tag, double Confidence, IReadOnlyList<string> Signals,
+    string Frame, string Root, string Scope, string Label);
 
 /// <summary>Executes semantic form checks independently and verifies each action by reading state back.</summary>
 public sealed class FormAutomator
@@ -36,13 +39,13 @@ public sealed class FormAutomator
     {
         WaitUntil(() => string.Equals(((IJavaScriptExecutor)driver).ExecuteScript("return document.readyState")?.ToString(),
             "complete", StringComparison.OrdinalIgnoreCase), "document.readyState=complete");
-        var results = new List<FieldResult>(3)
-        {
-            RunIndependent(driver, Fields.FirstName, () => CheckFirstName(driver, data.FirstName, onResolvedForTest)),
-            RunIndependent(driver, Fields.Gender, () => CheckGender(driver, data.Gender, onResolvedForTest)),
-            RunIndependent(driver, Fields.State, () => CheckState(driver, data.State, data.Country, onResolvedForTest))
-        };
-        foreach (var result in results) onVerified?.Invoke(result);
+        var results = new List<FieldResult>(3);
+        results.Add(RunIndependent(driver, Fields.FirstName, () => CheckFirstName(driver, data.FirstName, onResolvedForTest)));
+        onVerified?.Invoke(results[^1]);
+        results.Add(RunIndependent(driver, Fields.Gender, () => CheckGender(driver, data.Gender, onResolvedForTest)));
+        onVerified?.Invoke(results[^1]);
+        results.Add(RunIndependent(driver, Fields.State, () => CheckState(driver, data.State, data.Country, onResolvedForTest)));
+        onVerified?.Invoke(results[^1]);
         return results;
     }
 
@@ -100,7 +103,7 @@ public sealed class FormAutomator
         finally { driver.SwitchTo().DefaultContent(); }
 
         VerifyNoTextDecoyReceivedValue(driver, resolved.Candidate, value);
-        return Passed(Fields.FirstName, value, resolved.Score, actions, degraded);
+        return Passed(Fields.FirstName, value, resolved, actions, degraded);
     }
 
     private FieldResult CheckGender(IWebDriver driver, string expected, Action<string, IWebElement>? onResolvedForTest)
@@ -131,7 +134,8 @@ public sealed class FormAutomator
             if (otherSelected) throw new InvalidOperationException("More than one option in the Gender group is selected.");
         }
         finally { driver.SwitchTo().DefaultContent(); }
-        return Passed(Fields.Gender, selected.Descriptor.OptionText, anchor.Score, ["selected exact option", "verified selected state and unselected peers"], false);
+        var selectedScore = anchor with { Candidate = selected };
+        return Passed(Fields.Gender, selected.Descriptor.OptionText, selectedScore, ["selected exact option", "verified selected state and unselected peers"], false);
     }
 
     private FieldResult CheckState(IWebDriver driver, string requestedState, string requestedCountry, Action<string, IWebElement>? onResolvedForTest)
@@ -192,14 +196,17 @@ public sealed class FormAutomator
             actions.Add("read-back verified");
         }
         finally { driver.SwitchTo().DefaultContent(); }
-        return Passed(Fields.State, value, resolved.Score, actions, false);
+        return Passed(Fields.State, value, resolved, actions, false);
     }
 
     private void ChooseCountryPrecondition(IWebDriver driver, string requestedCountry, ICollection<string> actions)
     {
         if (string.IsNullOrWhiteSpace(requestedCountry))
             throw new InvalidOperationException("State dropdown is dependent and empty. Supply --country to select its precondition.");
-        var country = ResolveWithRetry(driver, Fields.Country);
+        var countrySelect = Fields.Country with { Kind = FieldKind.Select };
+        ScoredCandidate country;
+        try { country = ResolveWithRetry(driver, countrySelect); }
+        catch (TimeoutException) { country = ResolveWithRetry(driver, Fields.Country); }
         _resolver.SwitchToCandidateContext(driver, country.Candidate);
         try
         {
@@ -233,7 +240,10 @@ public sealed class FormAutomator
         {
             try
             {
-                var set = _resolver.ResolveAll(driver, TargetFields, _verbose && !_hasLoggedResolution ? _log : null);
+                var requestedFields = TargetFields.Any(target => target.Name == field.Name)
+                    ? TargetFields
+                    : TargetFields.Append(field).ToArray();
+                var set = _resolver.ResolveAll(driver, requestedFields, _verbose && !_hasLoggedResolution ? _log : null);
                 _hasLoggedResolution = true;
                 if (set.Candidates.TryGetValue(field.Name, out var candidate)) return candidate;
                 last = new InvalidOperationException(set.Errors.GetValueOrDefault(field.Name, $"Could not resolve {field.Name}."));
@@ -312,6 +322,12 @@ public sealed class FormAutomator
 
     private static string Mask(string value) => value.Length <= 2 ? "**" : value[..1] + new string('*', Math.Min(8, value.Length - 2)) + value[^1..];
 
-    private static FieldResult Passed(SemanticField field, string value, double score, IReadOnlyList<string> actions, bool degraded) =>
-        new(field.Name, "Passed", "Read-back verified.", value, score, degraded, actions);
+    private static FieldResult Passed(SemanticField field, string value, ScoredCandidate resolved, IReadOnlyList<string> actions, bool degraded)
+    {
+        var candidate = resolved.Candidate;
+        var descriptor = candidate.Descriptor;
+        var details = new ResolvedField(descriptor.Tag, Math.Clamp(resolved.Score / 150d, 0, 1), resolved.Signals,
+            candidate.FramePath.Count == 0 ? "top" : string.Join("/", candidate.FramePath), descriptor.RootKey, descriptor.ScopeKey, descriptor.Label);
+        return new FieldResult(field.Name, "Passed", "Read-back verified.", value, resolved.Score, degraded, actions, details);
+    }
 }

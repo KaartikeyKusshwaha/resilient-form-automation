@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using FormAutomation;
 using FormAutomation.Config;
+using FormAutomation.Reporting;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
@@ -51,7 +52,13 @@ try
     var automator = new FormAutomator(options.Verbose ? Console.WriteLine : null,
         TimeSpan.FromSeconds(options.TimeoutSeconds), options.PollMilliseconds, options.Verbose);
     var data = new TestData(options.FirstName, options.Gender, options.State ?? "", options.Country ?? "");
-    var results = automator.Run(driver, data);
+    var startedAt = DateTimeOffset.UtcNow;
+    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+    var artifactDirectory = Path.GetFullPath(options.ArtifactsDir);
+    Directory.CreateDirectory(artifactDirectory);
+    var screenshots = new Dictionary<string, string>(StringComparer.Ordinal);
+    var results = automator.Run(driver, data, result => CaptureScreenshot(driver, artifactDirectory, result, screenshots));
+    stopwatch.Stop();
     var passed = 0;
     foreach (var result in results)
     {
@@ -62,6 +69,9 @@ try
         if (result.Degraded) Console.WriteLine($"  Degraded interaction strategy used: {string.Join(", ", result.Actions ?? [])}.");
     }
     Console.WriteLine($"Summary: {passed} passed, {results.Count - passed} failed or errored.");
+    var browser = $"{driver.Capabilities.GetCapability("browserName")} {driver.Capabilities.GetCapability("browserVersion")}".Trim();
+    var reportPath = RunReportWriter.Write(artifactDirectory, options.Url, startedAt, stopwatch.Elapsed, browser, results, screenshots);
+    Console.WriteLine($"Report: {reportPath}");
     return results.Count == 3 && passed == 3 ? 0 : 1;
 }
 catch (Exception ex)
@@ -96,6 +106,21 @@ static void PrintHelp()
     Console.WriteLine("       [--first-name VALUE] [--gender VALUE] [--state VALUE] [--country VALUE]");
     Console.WriteLine("       [--thorough] [--artifacts DIR] [--dump-html PATH] [--verbose] [--no-sandbox]");
     Console.WriteLine("URL precedence: command line > FORM_* environment variables > appsettings.json.");
+}
+
+static void CaptureScreenshot(ChromeDriver driver, string directory, FieldResult result, IDictionary<string, string> screenshots)
+{
+    try
+    {
+        var name = Regex.Replace(result.Field.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+        var path = Path.Combine(directory, $"{name}.png");
+        driver.GetScreenshot().SaveAsFile(path);
+        screenshots[result.Field] = path;
+    }
+    catch (WebDriverException exception)
+    {
+        Console.Error.WriteLine($"Could not capture screenshot for {result.Field}: {exception.Message}");
+    }
 }
 
 internal static partial class HtmlDumpRedactor

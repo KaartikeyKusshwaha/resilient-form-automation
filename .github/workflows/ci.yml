@@ -1,0 +1,29 @@
+name: Task 1 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      FORM_NO_SANDBOX: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: browser-actions/setup-chrome@v1
+      - name: Restore
+        run: dotnet restore
+      - name: Build with warnings as errors
+        run: dotnet build -c Release --no-restore -warnaserror
+      - name: Run offline and mutation tests
+        run: dotnet test -c Release --no-build --filter "Category!=Live"
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task1-artifacts
+          path: artifacts/
