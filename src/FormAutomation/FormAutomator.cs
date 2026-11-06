@@ -155,7 +155,8 @@ public sealed class FormAutomator
         foreach (var rowObj in rows)
         {
             var row = SemanticResolver.AsList(rowObj);
-            if (row.Count >= 2 && row[0] is IWebElement el && CandidateScorer.IsWholeOptionMatch(SemanticResolver.Str(row[1]), text)) return el;
+            if (row.Count >= 2 && row[0] is IWebElement el && CandidateScorer.IsWholeOptionMatch(SemanticResolver.Str(row[1]), text))
+                return el;
         }
         return null;
     }
