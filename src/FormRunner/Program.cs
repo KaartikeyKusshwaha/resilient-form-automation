@@ -50,7 +50,7 @@ try
 
     stage = "field checks";
     var automator = new FormAutomator(options.Verbose ? Console.WriteLine : null,
-        TimeSpan.FromSeconds(options.TimeoutSeconds), options.PollMilliseconds, options.Verbose);
+        TimeSpan.FromSeconds(options.TimeoutSeconds), options.PollMilliseconds, options.Verbose, options.Thorough);
     var data = new TestData(options.FirstName, options.Gender, options.State ?? "", options.Country ?? "");
     var startedAt = DateTimeOffset.UtcNow;
     var stopwatch = System.Diagnostics.Stopwatch.StartNew();

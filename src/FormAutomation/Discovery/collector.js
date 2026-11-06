@@ -202,7 +202,9 @@ return (() => {
       let groupKey = '';
       if (kind === 'radio') {
         const named = element.getAttribute('name');
-        if (named && groupPeers.length >= 2) {
+        const sameNamedGroup = named && groupPeers.length >= 2 &&
+          groupPeers.every(peer => peer.getAttribute('name') === named);
+        if (sameNamedGroup) {
           const key = `${rootKey(root)}|${scope.key}|${named}`;
           if (!namedGroupIds.has(key)) namedGroupIds.set(key, `group:${++nextGroup}`);
           groupKey = namedGroupIds.get(key);

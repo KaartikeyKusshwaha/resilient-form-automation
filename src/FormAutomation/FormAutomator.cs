@@ -22,15 +22,18 @@ public sealed class FormAutomator
     private readonly TimeSpan _timeout;
     private readonly int _pollMilliseconds;
     private readonly bool _verbose;
+    private readonly bool _thorough;
     private bool _hasLoggedResolution;
 
     /// <summary>Creates the runner's field-check orchestrator.</summary>
-    public FormAutomator(Action<string>? log, TimeSpan timeout, int pollMilliseconds = 250, bool verbose = false)
+    public FormAutomator(Action<string>? log, TimeSpan timeout, int pollMilliseconds = 250,
+        bool verbose = false, bool thorough = false)
     {
         _log = log;
         _timeout = timeout;
         _pollMilliseconds = Math.Clamp(pollMilliseconds, 10, 5000);
         _verbose = verbose;
+        _thorough = thorough;
     }
 
     /// <summary>Runs First Name, Gender, and State checks; a failed field does not stop later checks.</summary>
@@ -116,26 +119,28 @@ public sealed class FormAutomator
         var selected = group.FirstOrDefault(candidate => CandidateScorer.IsGenderOptionMatch(candidate.Descriptor.OptionText, expected));
         if (selected is null)
             throw new InvalidOperationException($"Gender option '{expected}' was not found as a whole option in the resolved radio group.");
+        var actions = new List<string> { "selected exact option" };
+        var degraded = false;
         _resolver.SwitchToCandidateContext(driver, selected);
         onResolvedForTest?.Invoke($"gender_{TextNormalizer.Normalize(expected).Replace(' ', '_')}", selected.Element);
         try
         {
-            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView({block:'center'});", selected.Element);
-            try { selected.Element.Click(); }
-            catch (WebDriverException)
+            degraded |= SelectRadioAndVerify(driver, group, selected);
+            if (_thorough)
             {
-                var clicked = (bool?)((IJavaScriptExecutor)driver).ExecuteScript("const e=arguments[0]; if(e.labels?.length){e.labels[0].click();return true;} if(e.nextElementSibling){e.nextElementSibling.click();return true;} e.click();return true;", selected.Element) ?? false;
-                if (!clicked) throw;
+                foreach (var option in group)
+                {
+                    degraded |= SelectRadioAndVerify(driver, group, option);
+                    actions.Add($"thoroughly verified '{option.Descriptor.OptionText}'");
+                }
+                degraded |= SelectRadioAndVerify(driver, group, selected);
             }
-            if (!selected.Element.Selected && selected.Element.GetAttribute("aria-checked") != "true")
-                throw new InvalidOperationException("Gender option did not become selected.");
-            var otherSelected = group.Where(candidate => candidate.Element != selected.Element)
-                .Any(candidate => candidate.Element.Selected || candidate.Element.GetAttribute("aria-checked") == "true");
-            if (otherSelected) throw new InvalidOperationException("More than one option in the Gender group is selected.");
         }
         finally { driver.SwitchTo().DefaultContent(); }
         var selectedScore = anchor with { Candidate = selected };
-        return Passed(Fields.Gender, selected.Descriptor.OptionText, selectedScore, ["selected exact option", "verified selected state and unselected peers"], false);
+        actions.Add("verified selected state and unselected peers");
+        if (degraded) actions.Add("cleared peers not natively grouped by the page");
+        return Passed(Fields.Gender, selected.Descriptor.OptionText, selectedScore, actions, degraded);
     }
 
     private FieldResult CheckState(IWebDriver driver, string requestedState, string requestedCountry, Action<string, IWebElement>? onResolvedForTest)
@@ -179,6 +184,26 @@ public sealed class FormAutomator
                 if (desired is null) throw new InvalidOperationException($"State option '{requestedState}' was not found after waiting for the dependent dropdown.");
                 select.SelectByText(desired.Text);
                 value = select.SelectedOption.Text.Trim();
+                if (_thorough)
+                {
+                    var restoreText = desired.Text;
+                    foreach (var optionText in selectable.Select(option => option.Text).Distinct(StringComparer.OrdinalIgnoreCase).Take(3))
+                    {
+                        select = new SelectElement(element);
+                        var option = select.Options.FirstOrDefault(item => MatchStrength.IsWholeOptionMatch(item.Text, optionText));
+                        if (option is null) continue;
+                        select.SelectByText(option.Text);
+                        var actual = new SelectElement(element).SelectedOption.Text.Trim();
+                        if (!MatchStrength.IsWholeOptionMatch(actual, option.Text))
+                            throw new InvalidOperationException($"State option read-back mismatch during thorough check: expected '{option.Text}', got '{actual}'.");
+                        actions.Add($"thoroughly verified '{actual}'");
+                    }
+                    select = new SelectElement(element);
+                    var restore = select.Options.FirstOrDefault(item => MatchStrength.IsWholeOptionMatch(item.Text, restoreText));
+                    if (restore is null) throw new InvalidOperationException($"Could not restore State option '{restoreText}' after thorough checks.");
+                    select.SelectByText(restore.Text);
+                    value = new SelectElement(element).SelectedOption.Text.Trim();
+                }
             }
             else
             {
@@ -231,6 +256,39 @@ public sealed class FormAutomator
         }
         finally { driver.SwitchTo().DefaultContent(); }
     }
+
+    private static bool SelectRadioAndVerify(IWebDriver driver, IReadOnlyList<DomCandidate> group, DomCandidate selected)
+    {
+        var degraded = false;
+        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView({block:'center'});", selected.Element);
+        try { selected.Element.Click(); }
+        catch (WebDriverException)
+        {
+            var clicked = (bool?)((IJavaScriptExecutor)driver).ExecuteScript(
+                "const e=arguments[0]; if(e.labels?.length){e.labels[0].click();return true;} if(e.nextElementSibling){e.nextElementSibling.click();return true;} e.click();return true;",
+                selected.Element) ?? false;
+            if (!clicked) throw;
+        }
+        if (!selected.Element.Selected && selected.Element.GetAttribute("aria-checked") != "true")
+            throw new InvalidOperationException("Gender option did not become selected.");
+        var selectedPeers = group.Where(candidate => candidate.Element != selected.Element)
+            .Where(IsRadioSelected).ToList();
+        foreach (var peer in selectedPeers)
+        {
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "const e=arguments[0]; if(e.matches('input[type=radio]')) e.checked=false; " +
+                "if(e.getAttribute('role')==='radio') e.setAttribute('aria-checked','false'); " +
+                "e.dispatchEvent(new Event('input',{bubbles:true})); e.dispatchEvent(new Event('change',{bubbles:true}));",
+                peer.Element);
+            degraded = true;
+        }
+        if (group.Where(candidate => candidate.Element != selected.Element).Any(IsRadioSelected))
+            throw new InvalidOperationException("More than one option in the Gender group is selected.");
+        return degraded;
+    }
+
+    private static bool IsRadioSelected(DomCandidate candidate) =>
+        candidate.Element.Selected || candidate.Element.GetAttribute("aria-checked") == "true";
 
     private ScoredCandidate ResolveWithRetry(IWebDriver driver, SemanticField field)
     {

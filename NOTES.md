@@ -1,36 +1,77 @@
-# Approach and inspection notes
+# Approach and implementation notes
 
-## Environment
+## Approach
 
-- Checked 2026-11-06 (Asia/Kolkata).
-- The machine PATH had .NET SDK 9.0.315 only. Installed the required .NET 8.0.427 SDK in the user profile alongside it; `global.json` pins this repository to the .NET 8 feature band.
-- Python 3.12.10 and Git 2.51.0 are available.
-- Chrome is not on PATH. Selenium Manager is used as the supported first-run browser/driver acquisition path; network access to the target page returned HTTP 200.
-- `dotnet build -c Release -warnaserror`: passed after scaffold setup (0 warnings, 0 errors).
-- `dotnet run --project src/FormRunner -- --url https://app.cloudqa.io/home/AutomationPracticeForm --timeout 30 --dump-html fixtures/live.html`: exited 0; anti-forgery input values were redacted. The live capture remains ignored by Git.
-- `dotnet run --project src/FormRunner -- --url fixtures/baseline.html --timeout 30 --dump-html artifacts/baseline_rendered.html`: exited 0; Selenium opened the local baseline and found rendered controls.
+The runner locates First Name, Gender, and State by the same evidence a user sees: associated labels, ARIA names, placeholders, visible text near the control, radio option captions, and only weakly id/name/class tokens. It scans generic HTML controls and ARIA roles in the main document, open shadow roots, and nested frames. A scorer rejects incompatible, hidden, disabled, or read-only elements and penalizes negative signals such as Last Name or Country. A scope-first resolver prefers one form context containing all three fields. Every interaction is checked by reading the typed value, selected radio state, or chosen dropdown value back from the page.
+
+## Why not fixed selectors
+
+The assignment says page order and id/name/class values may change. The collector therefore uses generic element types and roles to discover candidates, not fixed page selectors. Human-facing labels and nearby text carry most of the score. Attributes can add only a small capped amount, so randomizing them does not break the lookup.
+
+## Scoring model
+
+| Evidence family | Weight / behavior |
+|---|---|
+| Visible label, ARIA group name, legend | Full match strength; exact canonical phrase scores 100 |
+| ARIA label, placeholder, title | 0.8 multiplier |
+| Nearby left/above text and sibling text | 0.65 multiplier |
+| id/name/class tokens | 8 points per distinct hint, capped at 15 |
+| Negative phrase in visible semantic text | -120, except exact positive phrase |
+| Negative phrase only in attributes | -15 |
+| Radio group with at least two gender-like options | +60 content signal when the group label is absent |
+| Scope selection | Sum of best field scores + 50 per covered field + `5 * log2(1 + controls)` + 3 for top-document tie-break |
+
+Acceptance threshold is 50. Gender options use normalized whole-option equality first, with limited documented synonyms after exact equality fails. The dropdown's option text is never treated as the State field's label.
 
 ## Decisions
 
-- Use the .NET 8 SDK installed under the user profile instead of changing the machine-wide SDK installation.
-- Ignore the local `fixtures/live.html` capture because it contains session-specific page markup; commit only the redacted, test-safe baseline fixture.
+- Use .NET 8 and Selenium WebDriver 4 with Selenium Manager for driver management.
+- Use the user-profile .NET 8 SDK without changing the machine-wide SDK installation.
+- Keep the captured live baseline separate from generated mutation pages so test-only oracle markers never enter a captured page.
+- Use `file://` local fixtures so the offline mutation suite does not need a local HTTP server.
+- Accept a zero-opacity native radio only when its associated visible label is usable; this supports common styled-radio markup while still rejecting invisible honeypots.
 
-## Facts
+## Facts from the live page preflight
 
-- The target page returned HTTP 200 and a rendered Selenium capture was saved locally. Both the prior `fixtures/baseline.html` and the temporary live capture contain seven anti-forgery fields whose values are redacted. The live capture is ignored by Git.
-- The primary First Name control is a text input with a visible “First Name” label; a Last Name input is adjacent and is a deliberate look-alike.
-- Gender is a native radio group. The visible option captions (“Male”, “Female”, “Transgender”) are bare adjacent text, not associated `<label>` elements. `Male` must be matched as a whole option; it must never match `Female`.
-- State is a native `<select>` with a “-- Select Country --” placeholder. Its current options are country names even though the field is labelled State. A separate Country text/autocomplete control exists. The current static source shows three State selects, so order and duplicated controls cannot identify the target by themselves.
-- The rendered source contains three iframe tags, repeated fields, a modal, and unrelated rich-text editor controls. The source serialization does not include open shadow-root contents; runtime discovery still needs to check those contexts.
+Checked 2026-11-06. The assignment URL returned HTTP 200 and was opened with Selenium. The main First Name field has a visible label; Last Name is adjacent. Gender is a native radio group whose visible option captions are bare adjacent text (`Male`, `Female`, `Transgender`) rather than associated labels. State is a native select with a `-- Select Country --` placeholder; the captured page currently offers country names under the State label. The page also contains a separate Country autocomplete, three iframe elements, repeated field sections, a modal, and rich-text controls. This is treated as observed page behavior, not a reason to assume all modified pages use the same structure.
+
+## Mutation coverage
+
+| Fixture | Evidence |
+|---|---|
+| m00–m01 | baseline and reordered controls |
+| m02–m03 | scrambled attributes and restructured layout |
+| m04 | look-alike labels, hidden/off-screen honeypots, modal, and decoy selects/radios |
+| m05–m06 | no-label ARIA fields and custom/visually hidden controls |
+| m07 | delayed form rendering |
+| m08–m10 | iframe, open shadow root, iframe inside shadow root |
+| m11 | two competing complete forms; larger scope selected |
+| m12 | combined randomized wording/order/attributes (extra coverage) |
+
+The integration tests use `data-test-target` and `data-test-decoy` only in fixtures and test code as an oracle. The lint suite rejects these markers in production source and rejects fixed-selector calls.
 
 ## Evidence
 
-- Preflight command: `curl.exe -sI --max-time 15 https://app.cloudqa.io/home/AutomationPracticeForm` returned `HTTP/1.1 200 OK`.
-- Capture command: `dotnet run --project src/FormRunner -- --url https://app.cloudqa.io/home/AutomationPracticeForm --timeout 30 --dump-html fixtures/live.html`; result: exit 0, rendered page saved, request-verification values redacted.
-- Local baseline command: `dotnet run --project src/FormRunner -- --url fixtures/baseline.html --timeout 30 --dump-html artifacts/baseline_rendered.html`; result: exit 0, page rendered and controls were present.
+- `.NET 8.0.427`; `dotnet build -c Release -warnaserror`: passed with 0 warnings and 0 errors.
+- `dotnet test -c Release --filter "Category!=Live"`: 35 tests passed, 0 failed, 0 skipped on 2026-11-06, after the `--thorough` integration test and radio-group collector fix.
+- `dotnet test -c Release --filter "Category=Live"`: 1 live CloudQA end-to-end test passed on 2026-11-06; First Name, Gender, and State each passed read-back verification. A separate manual headed-independent `FormRunner` live run also reported 3/3 PASS.
+- Manual runner checks on m00–m12: all 13 fixture pages produced three PASS results. The m06 custom radio issue and m11 duplicate-id fixture issue were found and fixed before the oracle-backed suite.
+- `MutationTests`: 12 required fixtures passed with the correct target markers and decoys unchanged.
+- `--verbose` printed candidate rankings and the selected form scope.
+- Manual `report.json` check showed three checks, confidence/signals, actions, screenshots, duration, browser, and summary counts.
+- `--dump-html` saved the rendered DOM while redacting request-verification token values.
+- Windows PowerShell and Bash clean-clone verification scripts are included; run both where supported after pushing.
+- GitHub Actions execution is pending until the repository is pushed.
+
+## Limitations
+
+- Heuristic English matching may miss unusual or non-English labels, images, canvas-based controls, or equally plausible duplicate forms.
+- Closed shadow roots cannot be inspected. Cross-origin frames are supported when Selenium can enter them; inaccessible or sandboxed frames may be skipped.
+- Custom widgets are best effort. Virtualized menus, canvas controls, and unusual option state are not guaranteed.
+- The live assignment page currently presents country names under the State label; a requested State value that is absent fails rather than selecting a different option.
+- Gender option synonyms are intentionally conservative; extend the catalog for additional vocabularies.
 
 ## Open items
 
-- Implement the full semantic resolver, mutation suite, reports, and CI; the checked-in starter code is not submission-ready.
-- Verify runtime discovery across the live page's frames and open shadow roots after the collector is implemented.
-- Run the three checks against the live page and record the honest result.
+- Finish clean-clone verification and record CI status after pushing the private repository.
+- Keep the limitations section aligned with the actual behavior and any test failures.

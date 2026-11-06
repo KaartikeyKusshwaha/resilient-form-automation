@@ -59,6 +59,26 @@ public sealed class MutationTests
         }
     }
 
+    [Test]
+    [Category("Mutation")]
+    public void ThoroughModeCyclesOptionsAndRestoresConfiguredChoices()
+    {
+        var path = Path.Combine(FindRepositoryRoot(), "fixtures", "mutations", "m00_baseline.html");
+        using var driver = CreateDriver();
+        driver.Navigate().GoToUrl(new Uri(path).AbsoluteUri);
+        var runner = new FormAutomator(null, TimeSpan.FromSeconds(6), pollMilliseconds: 100, thorough: true);
+        var results = runner.Run(driver, new TestData("TestFirst", "Male", "Gujarat", "India"));
+
+        Assert.That(results.All(result => result.Status == "Passed"), Is.True,
+            string.Join(" | ", results.Select(result => $"{result.Field}: {result.Message}")));
+        Assert.That(results.Single(result => result.Field == "Gender").Value, Is.EqualTo("Male"));
+        Assert.That(results.Single(result => result.Field == "State").Value, Is.EqualTo("Gujarat"));
+        Assert.That(results.Single(result => result.Field == "Gender").Actions,
+            Does.Contain("thoroughly verified 'Female'"));
+        Assert.That(results.Single(result => result.Field == "State").Actions,
+            Does.Contain("thoroughly verified 'California'"));
+    }
+
     private static IEnumerable<string> FixtureNames() => Fixtures;
 
     private static IWebDriver CreateDriver()
