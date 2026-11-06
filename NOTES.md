@@ -60,7 +60,7 @@ The integration tests use `data-test-target` and `data-test-decoy` only in fixtu
 - `--verbose` printed candidate rankings and the selected form scope.
 - Manual `report.json` check showed three checks, confidence/signals, actions, screenshots, duration, browser, and summary counts.
 - `--dump-html` saved the rendered DOM while redacting request-verification token values.
-- Windows PowerShell and Bash clean-clone verification scripts are included; run both where supported after pushing.
+- `scripts/verify-clean-clone.ps1`: passed on Windows; clean clone built warning-free and all 35 offline tests passed.
 - GitHub Actions execution is pending until the repository is pushed.
 
 ## Limitations
@@ -73,5 +73,5 @@ The integration tests use `data-test-target` and `data-test-decoy` only in fixtu
 
 ## Open items
 
-- Finish clean-clone verification and record CI status after pushing the private repository.
+- Record GitHub Actions status after pushing the private repository.
 - Keep the limitations section aligned with the actual behavior and any test failures.
