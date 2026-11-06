@@ -37,6 +37,7 @@ return (() => {
   const candidateControls = controls.map(item => item.element);
   const scopeIds = new WeakMap();
   const groupIds = new WeakMap();
+  const namedGroupIds = new Map();
   let nextScope = 0, nextGroup = 0;
   const idFor = (map, element, prefix, next) => {
     if (!element) return `${prefix}:root`;
@@ -176,12 +177,20 @@ return (() => {
       const fieldset = element.closest('fieldset');
       const legendText = textOf(fieldset?.querySelector('legend'));
       const radioGroup = element.closest('[role="radiogroup"]');
-      const groupAriaLabel = clean(radioGroup?.getAttribute('aria-label')) || textOf(root.getElementById?.(radioGroup?.getAttribute('aria-labelledby')));
+      const groupLabelledBy = radioGroup?.getAttribute('aria-labelledby');
+      const groupAriaLabel = clean(radioGroup?.getAttribute('aria-label')) ||
+        (groupLabelledBy ? textOf(root.getElementById?.(groupLabelledBy)) : '');
       const scope = scopeFor(element, root);
       const info = visible(element);
-      const labelVisible = labels.some(label => {
-        try { const node = (element.labels || []).find(item => textOf(item) === label); return node ? visible(node).selfVisible : false; }
-        catch { return false; }
+      const labelVisible = [...(element.labels || [])].some(node => {
+        try {
+          const rect = node.getBoundingClientRect();
+          for (let parent = node; parent; parent = parentOrHost(parent)) {
+            const style = getComputedStyle(parent);
+            if (style.display === 'none' || style.visibility === 'hidden' || Number.parseFloat(style.opacity) === 0 || parent.hidden) return false;
+          }
+          return rect.width > 0 && rect.height > 0;
+        } catch { return false; }
       });
       const anchor = kind === 'radio' ? groupAnchor(element) : element;
       const near = nearby(element, anchor, root);
@@ -193,8 +202,13 @@ return (() => {
       let groupKey = '';
       if (kind === 'radio') {
         const named = element.getAttribute('name');
-        const groupNode = named && groupPeers.length >= 2 ? scope.node : groupAnchor(element);
-        groupKey = idFor(groupIds, groupNode, 'group', () => ++nextGroup);
+        if (named && groupPeers.length >= 2) {
+          const key = `${rootKey(root)}|${scope.key}|${named}`;
+          if (!namedGroupIds.has(key)) namedGroupIds.set(key, `group:${++nextGroup}`);
+          groupKey = namedGroupIds.get(key);
+        } else {
+          groupKey = idFor(groupIds, groupAnchor(element), 'group', () => ++nextGroup);
+        }
       }
       const ancestorHidden = info.ariaHidden && !labelVisible;
       const ownLabel = clean(labelled.join(' '));
