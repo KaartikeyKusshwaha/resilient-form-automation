@@ -113,7 +113,7 @@ public static class CandidateScorer
     public static bool IsWholeOptionMatch(string? option, string? expected) => MatchStrength.IsWholeOptionMatch(option, expected);
 
     /// <summary>Scores one candidate for one field, including visibility and type hard rejects.</summary>
-    public static ScoredCandidate Score(DomCandidate candidate, SemanticField field, bool forWrite = true)
+    public static ScoredCandidate Score(DomCandidate candidate, SemanticField field, bool forWrite = true, bool genderVocabulary = false)
     {
         var descriptor = candidate.Descriptor;
         var reject = RejectReason(descriptor, field, forWrite);
@@ -148,6 +148,11 @@ public static class CandidateScorer
         if (descriptor.InModal) notes.Add("inside modal");
         if (descriptor.ScopeControlCount > 0) notes.Add($"scope controls={descriptor.ScopeControlCount}");
         var score = primary + corroboration + attribute + penalty;
+        if (field.Kind == FieldKind.Radio && genderVocabulary)
+        {
+            score += 60;
+            notes.Add("radio group has gender-option vocabulary=60");
+        }
         return new ScoredCandidate(candidate, score, notes, label, aria, near, attribute, penalty);
     }
 
@@ -177,7 +182,8 @@ public static class CandidateScorer
 
     private static string? RejectReason(CandidateDescriptor descriptor, SemanticField field, bool forWrite)
     {
-        if (!(descriptor.SelfVisible || descriptor.LabelVisible) || descriptor.Offscreen || descriptor.OpacityZero || descriptor.TinyBox)
+        if (!(descriptor.SelfVisible || descriptor.LabelVisible) || descriptor.Offscreen ||
+            (descriptor.OpacityZero && !descriptor.LabelVisible) || (descriptor.TinyBox && !descriptor.LabelVisible))
             return "not effectively visible";
         if (descriptor.AriaHidden && !descriptor.LabelVisible) return "aria-hidden without a visible label";
         if (forWrite && descriptor.Disabled) return "disabled";
